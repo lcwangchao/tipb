@@ -29,6 +29,11 @@ message Error {
 	optional string msg = 2 [(gogoproto.nullable) = false];
 }
 
+message PartialOutput {
+	optional EncodeType encode_type = 2 [(gogoproto.nullable) = false];
+	repeated Chunk chunks = 3 [(gogoproto.nullable) = false];
+}
+
 // Response for SelectRequest.
 message SelectResponse {
 	optional Error error = 1;
@@ -53,6 +58,9 @@ message SelectResponse {
 	// ndvs collects the number of distinct value information per range. It will be used to serve as execution feedback information.
 	// Helping us improve the table's statistics information.
 	repeated int64 ndvs = 10;
+
+	// SemiChunks is used to store the semi result of the query.
+	repeated PartialOutput partial_outputs = 11;
 }
 
 // Chunk contains multiple rows data and rows meta.
@@ -68,6 +76,12 @@ message Chunk {
 message RowMeta {
 	optional int64 handle = 1 [(gogoproto.nullable) = false];
 	optional int64 length = 2 [(gogoproto.nullable) = false];
+}
+
+message PartialOutputBarrier {
+	required uint32 position = 1;
+	repeated uint32 output_offsets = 2;
+	optional EncodeType encode_type = 3 [(gogoproto.nullable) = false];
 }
 
 // DAGRequest represents the request that will be handled with DAG mode.
@@ -139,6 +153,8 @@ message DAGRequest {
 
 	// It indicates the number of digits by which to increase the scale of the result of division operations performed with the / operator.
 	optional uint32 div_precision_increment = 19;
+
+	repeated PartialOutputBarrier parital_output_barriers = 20;
 }
 
 enum EncodeType {
